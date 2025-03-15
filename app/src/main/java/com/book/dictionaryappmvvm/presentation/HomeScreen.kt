@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.book.dictionaryappmvvm.presentation.component.RepositoryItem
 
 private const val TAG = "HomeScreen"
 
@@ -31,7 +34,7 @@ private const val TAG = "HomeScreen"
 @Composable
 fun HomeScreen() {
     val viewModel: MainViewModel = hiltViewModel()
-    val state = viewModel.mainState.collectAsState()
+    val state = viewModel.mainState.collectAsStateWithLifecycle()
 
 
     Scaffold(
@@ -41,8 +44,8 @@ fun HomeScreen() {
             )
         }
 
-    ) {
-        Box(modifier = Modifier.padding(it)) {
+    ) {paddingValue ->
+        Box(modifier = Modifier.padding(paddingValue).fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -61,19 +64,26 @@ fun HomeScreen() {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                if(state.value.isLoading){
-                    CircularProgressIndicator()
-                }else {
-                    state.value.respons?.let { it ->
-                        LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                            items(it.items?.size ?: 0) {position ->
-                                Text(
-                                    text = it.items?.get(position)?.name ?: ""
-                                )
+                Box(modifier = Modifier.fillMaxSize().weight(1f)){
+                    if(state.value.isLoading){
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(70.dp).align(alignment = Alignment.Center)
+                        )
+                    }else {
+                        state.value.respons?.let { it ->
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                items(it.items?.size ?: 0) {position ->
+                                    RepositoryItem(
+                                        repoName = it.items?.get(position)?.name ?: "Unknown name",
+                                        repoDetails = it.items?.get(position)?.description ?: "Unknown name",
+                                        image = it.items?.get(position)?.owner?.avatarUrl ?: ""
+                                    )
+                                }
                             }
                         }
                     }
                 }
+
 
 
             }

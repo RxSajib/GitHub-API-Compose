@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.book.dictionaryappmvvm.domain.GithubRepository
 import com.book.dictionaryappmvvm.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -21,7 +22,19 @@ class MainViewModel @Inject constructor(
 
     private val _mainState = MutableStateFlow(MainEvent())
     val mainState = _mainState.asStateFlow()
-    
+
+    private var job : Job? = null
+
+    init {
+        _mainState.update {
+            it.copy(searchRepository = "Android")
+        }
+        job?.cancel()
+        job = viewModelScope.launch {
+            searchNewQuery()
+        }
+
+    }
 
     fun onEvent(mainUIEvent: MainUIEvent){
         when(mainUIEvent){
@@ -31,7 +44,10 @@ class MainViewModel @Inject constructor(
                 }
             }
             is MainUIEvent.searcClick -> {
-                searchNewQuery()
+                job?.cancel()
+                job = viewModelScope.launch {
+                    searchNewQuery()
+                }
             }
         }
     }
