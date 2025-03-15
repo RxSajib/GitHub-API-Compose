@@ -1,4 +1,4 @@
-package com.book.dictionaryappmvvm.presentation
+package com.book.dictionaryappmvvm.presentation.home_screen
 
 sealed class MainUIEvent {
 

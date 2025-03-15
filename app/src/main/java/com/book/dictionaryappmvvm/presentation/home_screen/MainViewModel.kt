@@ -1,7 +1,6 @@
-package com.book.dictionaryappmvvm.presentation
+package com.book.dictionaryappmvvm.presentation.home_screen
 
 import android.util.Log
-import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.book.dictionaryappmvvm.domain.GithubRepository
@@ -10,11 +9,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val TAG = "MainViewModel"
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: GithubRepository
@@ -23,7 +24,7 @@ class MainViewModel @Inject constructor(
     private val _mainState = MutableStateFlow(MainEvent())
     val mainState = _mainState.asStateFlow()
 
-    private var job : Job? = null
+    private var job: Job? = null
 
     init {
         _mainState.update {
@@ -36,13 +37,14 @@ class MainViewModel @Inject constructor(
 
     }
 
-    fun onEvent(mainUIEvent: MainUIEvent){
-        when(mainUIEvent){
+    fun onEvent(mainUIEvent: MainUIEvent) {
+        when (mainUIEvent) {
             is MainUIEvent.onSearchChange -> {
                 _mainState.update {
                     it.copy(searchRepository = mainUIEvent.search.toLowerCase())
                 }
             }
+
             is MainUIEvent.searcClick -> {
                 job?.cancel()
                 job = viewModelScope.launch {
@@ -52,26 +54,41 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun searchNewQuery(){
-        viewModelScope.launch {
+    private fun searchNewQuery() {
+        _mainState.value = _mainState.value.copy(
+            isLoading = false,
+            errorMessage = null,
+            respons = null
+        ) // Ensure state is updated immediately
+
+        job?.cancel()
+        job = viewModelScope.launch {
             repository.getGitHubRepository(
                 search = mainState.value.searchRepository
-            ).collect {result ->
-                when(result){
+            ).collectLatest { result ->
+                when (result) {
                     is Result.Loading -> {
-                        _mainState.update {event ->
-                            event.copy(isLoading = result.isLoading)
+                        _mainState.update { event ->
+                            event.copy(isLoading = result.isLoading, errorMessage = null)
                         }
                     }
+
                     is Result.Success -> {
+                        Log.d(TAG, "searchNewQuery: success")
                         result.data?.let { githubResult ->
                             _mainState.update {
-                                it.copy( respons = githubResult.copy())
+                                it.copy(respons = githubResult, errorMessage = null)
                             }
                         }
                     }
+
                     is Result.Error -> {
-                        null
+
+                        _mainState.update {
+                            it.copy(errorMessage = result.message ?: "Unknown Error", isLoading = false)
+                        }
+
+                        Log.d(TAG, "searchNewQuery: error message ${mainState.value.errorMessage}")
                     }
                 }
             }

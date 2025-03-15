@@ -1,5 +1,6 @@
 package com.book.dictionaryappmvvm.presentation.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,18 +26,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.book.dictionaryappmvvm.R
+import com.book.dictionaryappmvvm.data.dto.Item
 
 @Composable
-fun RepositoryItem(image : String, repoName : String, repoDetails : String) {
+fun RepositoryItem(item : Item, onclick : (Item) -> Unit) {
     Box(
-        modifier = Modifier.fillMaxWidth().padding(10.dp)
+        modifier = Modifier.fillMaxWidth().clickable{
+            onclick.invoke(item)
+        }.padding(10.dp)
     ){
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = image,
+                model = item.owner.url,
                 contentDescription = null,
                 modifier = Modifier.size(70.dp).clip(shape = RoundedCornerShape(size = 10.dp)),
                 error = painterResource(R.drawable.image_placeholder),
@@ -48,7 +52,7 @@ fun RepositoryItem(image : String, repoName : String, repoDetails : String) {
 
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                 Text(
-                    text = repoName,
+                    text = item.name,
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2,
                     style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold)
@@ -58,8 +62,8 @@ fun RepositoryItem(image : String, repoName : String, repoDetails : String) {
                     modifier = Modifier.height(5.dp)
                 )
                 Text(
-                    text = repoDetails,
                     modifier = Modifier.fillMaxWidth(),
+                    text = item.description,
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Light)
@@ -71,12 +75,3 @@ fun RepositoryItem(image : String, repoName : String, repoDetails : String) {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    RepositoryItem(
-        image = "",
-        repoName = "Kotlin",
-        repoDetails = "Bangladesh, to the east of India on the Bay of Bengal, is a South Asian country marked by lush greenery and many waterways. Its Padma (Ganges)"
-    )
-}
